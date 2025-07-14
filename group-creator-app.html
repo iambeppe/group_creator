@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Creator - Crea gruppi per il team building</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pink-sand: #f2007d;
+            --sunset: #441f72;
+            --aquamarine: #2abeb9;
+            --sunrays: #ffb511;
+            --white-flakes: #ffffff;
+            --dark-lava: #1e0023;
+        }
+        
+        body { 
+            font-family: 'Ubuntu', sans-serif; 
+            background: linear-gradient(135deg, var(--sunrays) 0%, var(--pink-sand) 100%);
+        }
+        
+        .title-font { 
+            font-family: 'Permanent Marker', cursive; 
+        }
+        
+        .btn-primary {
+            background: var(--pink-sand);
+            color: var(--white-flakes);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--sunset);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(242, 0, 125, 0.3);
+        }
+        
+        .btn-secondary {
+            background: var(--aquamarine);
+            color: var(--white-flakes);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--sunrays);
+        }
+        
+        .card-shadow {
+            box-shadow: 0 20px 40px rgba(30, 0, 35, 0.1);
+        }
+        
+        .group-card {
+            background: linear-gradient(135deg, var(--aquamarine), var(--sunset));
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transform: rotate(-1deg);
+            transition: all 0.3s ease;
+        }
+        
+        .group-card:nth-child(even) {
+            transform: rotate(1deg);
+        }
+        
+        .group-card:hover {
+            transform: rotate(0deg) scale(1.02);
+        }
+        
+        .member-tag {
+            background: var(--white-flakes);
+            color: var(--dark-lava);
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin: 4px;
+            display: inline-block;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div id="app" class="max-w-4xl mx-auto p-6">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="title-font text-5xl font-bold mb-2" style="color: var(--white-flakes); text-shadow: 2px 2px 4px rgba(30, 0, 35, 0.5);">
+                Group Creator
+            </h1>
+            <p class="text-xl font-medium" style="color: var(--white-flakes);">Crea gruppi random per il tuo team building</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="card-shadow rounded-2xl p-8 mb-8" style="background-color: var(--white-flakes);" id="input-section">
+            <div class="space-y-6">
+                <div class="text-center">
+                    <h2 class="title-font text-4xl font-bold mb-2" style="color: var(--sunset);">Inserisci i Partecipanti</h2>
+                    <p class="text-lg" style="color: var(--dark-lava);">Scrivi i nomi e scegli quanti gruppi creare</p>
+                </div>
+                
+                <!-- Lista Nomi -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-3" style="color: var(--sunset);">Nomi dei Partecipanti</h3>
+                    <p class="text-sm mb-3" style="color: var(--dark-lava);">Inserisci un nome per riga</p>
+                    <textarea 
+                        id="names-input" 
+                        placeholder="Marco Rossi&#10;Sara Bianchi&#10;Luca Verdi&#10;Anna Neri&#10;..."
+                        class="w-full h-48 p-4 border-3 rounded-lg resize-none focus:outline-none text-lg"
+                        style="border-color: var(--aquamarine); color: var(--dark-lava);"
+                    ></textarea>
+                    <div class="mt-2 text-sm" style="color: var(--sunset);">
+                        <span id="name-count">0</span> partecipanti inseriti
+                    </div>
+                </div>
+
+                <!-- Numero Gruppi -->
+                <div>
+                    <h3 class="text-xl font-semibold mb-3" style="color: var(--sunset);">Numero di Gruppi</h3>
+                    <div class="flex items-center gap-4">
+                        <input 
+                            type="number" 
+                            id="group-count" 
+                            min="2" 
+                            max="10" 
+                            value="3"
+                            class="w-24 p-3 border-3 rounded-lg text-center text-xl font-bold focus:outline-none"
+                            style="border-color: var(--aquamarine); color: var(--dark-lava);"
+                        >
+                        <span class="text-lg" style="color: var(--dark-lava);">gruppi</span>
+                        <div class="ml-4 text-sm" style="color: var(--sunset);">
+                            <span id="members-per-group">0</span> persone per gruppo circa
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottone Genera -->
+                <div class="text-center">
+                    <button 
+                        id="generate-btn"
+                        onclick="generateGroups()" 
+                        class="btn-primary px-8 py-4 rounded-xl transition-all transform hover:scale-105 shadow-lg text-xl font-semibold"
+                        disabled
+                    >
+                        🎲 Crea Gruppi Random
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden">
+            <div class="text-center mb-6">
+                <h2 class="title-font text-4xl font-bold mb-2" style="color: var(--white-flakes); text-shadow: 2px 2px 4px rgba(30, 0, 35, 0.5);">
+                    I Tuoi Gruppi
+                </h2>
+                <p class="text-lg font-medium" style="color: var(--white-flakes);">Gruppi creati randomicamente</p>
+            </div>
+
+            <div id="groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <!-- Groups will be inserted here -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <button onclick="regenerateGroups()" class="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    🔄 Riorganizza Gruppi
+                </button>
+                <button onclick="downloadGroups()" class="btn-secondary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    📥 Scarica Lista
+                </button>
+                <button onclick="resetApp()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg" style="background-color: var(--sunrays); color: var(--dark-lava);">
+                    🔄 Ricomincia
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentNames = [];
+        let currentGroups = [];
+
+        // Update counters in real time
+        document.getElementById('names-input').addEventListener('input', updateCounters);
+        document.getElementById('group-count').addEventListener('input', updateCounters);
+
+        function updateCounters() {
+            const textarea = document.getElementById('names-input');
+            const groupCountInput = document.getElementById('group-count');
+            const names = textarea.value.trim().split('\n').filter(name => name.trim() !== '');
+            const groupCount = parseInt(groupCountInput.value) || 0;
+
+            // Update name count
+            document.getElementById('name-count').textContent = names.length;
+            
+            // Update members per group
+            const membersPerGroup = groupCount > 0 ? Math.ceil(names.length / groupCount) : 0;
+            document.getElementById('members-per-group').textContent = membersPerGroup;
+
+            // Enable/disable generate button
+            const generateBtn = document.getElementById('generate-btn');
+            if (names.length >= 2 && groupCount >= 2 && groupCount <= names.length) {
+                generateBtn.disabled = false;
+                generateBtn.style.opacity = '1';
+            } else {
+                generateBtn.disabled = true;
+                generateBtn.style.opacity = '0.5';
+            }
+
+            currentNames = names;
+        }
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function generateGroups() {
+            const groupCount = parseInt(document.getElementById('group-count').value);
+            
+            if (currentNames.length < 2 || groupCount < 2) {
+                alert('Inserisci almeno 2 nomi e crea almeno 2 gruppi!');
+                return;
+            }
+
+            // Shuffle names randomly
+            const shuffledNames = shuffleArray(currentNames);
+            
+            // Create groups
+            const groups = [];
+            for (let i = 0; i < groupCount; i++) {
+                groups.push([]);
+            }
+
+            // Distribute names round-robin style
+            shuffledNames.forEach((name, index) => {
+                const groupIndex = index % groupCount;
+                groups[groupIndex].push(name);
+            });
+
+            currentGroups = groups;
+            displayGroups();
+        }
+
+        function displayGroups() {
+            const container = document.getElementById('groups-container');
+            const inputSection = document.getElementById('input-section');
+            const resultsSection = document.getElementById('results-section');
+
+            // Hide input, show results
+            inputSection.style.display = 'none';
+            resultsSection.classList.remove('hidden');
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Generate group cards
+            currentGroups.forEach((group, index) => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'group-card';
+                
+                const groupEmojis = ['🟥', '🟩', '🟦', '🟨', '🟪', '🟧', '⬛', '⬜', '🟫', '🔴'];
+                const emoji = groupEmojis[index % groupEmojis.length];
+                
+                groupCard.innerHTML = `
+                    <div class="text-center mb-4">
+                        <h3 class="title-font text-2xl font-bold" style="color: var(--white-flakes);">
+                            ${emoji} Gruppo ${index + 1}
+                        </h3>
+                        <p class="text-sm" style="color: var(--white-flakes); opacity: 0.9;">
+                            ${group.length} ${group.length === 1 ? 'persona' : 'persone'}
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap justify-center">
+                        ${group.map(name => `<span class="member-tag">${name}</span>`).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(groupCard);
+            });
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function regenerateGroups() {
+            generateGroups();
+        }
+
+        function downloadGroups() {
+            let content = 'GRUPPI TEAM BUILDING\n';
+            content += '===================\n\n';
+            
+            currentGroups.forEach((group, index) => {
+                content += `GRUPPO ${index + 1} (${group.length} persone)\n`;
+                content += '------------------------\n';
+                group.forEach(name => {
+                    content += `• ${name}\n`;
+                });
+                content += '\n';
+            });
+            
+            content += `\nGenerato il: ${new Date().toLocaleDateString('it-IT')}\n`;
+            content += `Totale partecipanti: ${currentNames.length}\n`;
+            content += `Numero gruppi: ${currentGroups.length}`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gruppi-team-building.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetApp() {
+            // Reset all data
+            currentNames = [];
+            currentGroups = [];
+            
+            // Reset inputs
+            document.getElementById('names-input').value = '';
+            document.getElementById('group-count').value = '3';
+            
+            // Reset UI
+            document.getElementById('input-section').style.display = 'block';
+            document.getElementById('results-section').classList.add('hidden');
+            
+            // Update counters
+            updateCounters();
+            
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize
+        updateCounters();
+    </script>
+</body>
+</html>
