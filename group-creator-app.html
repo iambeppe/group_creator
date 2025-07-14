@@ -48,6 +48,15 @@
             background: var(--sunrays);
         }
         
+        .btn-tertiary {
+            background: var(--sunset);
+            color: var(--white-flakes);
+        }
+        
+        .btn-tertiary:hover {
+            background: var(--pink-sand);
+        }
+        
         .card-shadow {
             box-shadow: 0 20px 40px rgba(30, 0, 35, 0.1);
         }
@@ -70,6 +79,28 @@
             transform: rotate(0deg) scale(1.02);
         }
         
+        .group-card-with-scene {
+            background: linear-gradient(135deg, var(--pink-sand), var(--sunset));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .group-card-with-scene::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
         .member-tag {
             background: var(--white-flakes);
             color: var(--dark-lava);
@@ -79,6 +110,30 @@
             display: inline-block;
             font-weight: 500;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .scene-card {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .scene-category {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+        
+        .scene-text {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -163,12 +218,45 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex flex-col md:flex-row justify-center gap-4">
+            <div class="flex flex-col md:flex-row justify-center gap-4 mb-8">
                 <button onclick="regenerateGroups()" class="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
                     🔄 Riorganizza Gruppi
                 </button>
+                <button id="assign-scenes-btn" onclick="assignScenes()" class="btn-tertiary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    🎭 Assegna Scene per l'Empatia
+                </button>
                 <button onclick="downloadGroups()" class="btn-secondary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
                     📥 Scarica Lista
+                </button>
+                <button onclick="resetApp()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg" style="background-color: var(--sunrays); color: var(--dark-lava);">
+                    🔄 Ricomincia
+                </button>
+            </div>
+        </div>
+
+        <!-- Empathy Section -->
+        <div id="empathy-section" class="hidden">
+            <div class="text-center mb-6">
+                <h2 class="title-font text-4xl font-bold mb-2" style="color: var(--white-flakes); text-shadow: 2px 2px 4px rgba(30, 0, 35, 0.5);">
+                    🎭 Teatrino dell'Empatia
+                </h2>
+                <p class="text-lg font-medium" style="color: var(--white-flakes);">Ogni gruppo ha la sua scena da interpretare</p>
+            </div>
+
+            <div id="empathy-groups-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+                <!-- Groups with scenes will be inserted here -->
+            </div>
+
+            <!-- Empathy Action Buttons -->
+            <div class="flex flex-col md:flex-row justify-center gap-4">
+                <button onclick="reassignScenes()" class="btn-tertiary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    🎲 Riassegna Scene
+                </button>
+                <button onclick="downloadEmpathyGroups()" class="btn-secondary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    📥 Scarica Lista con Scene
+                </button>
+                <button onclick="goBackToGroups()" class="btn-primary flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg">
+                    ← Torna ai Gruppi
                 </button>
                 <button onclick="resetApp()" class="flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg" style="background-color: var(--sunrays); color: var(--dark-lava);">
                     🔄 Ricomincia
@@ -180,6 +268,39 @@
     <script>
         let currentNames = [];
         let currentGroups = [];
+        let currentScenesAssignment = [];
+
+        // Scenes for empathy theater
+        const empathyScenes = {
+            "Situazioni di Pressione": [
+                "Hai appena ricevuto una critica dal tuo capo davanti a tutti",
+                "Sei sovraccarico di lavoro e tutti ti chiedono sempre qualcosa",
+                "Hai una scadenza impossibile e il cliente pretende tutto per ieri",
+                "Devi presentare un progetto ma la tecnologia non funziona",
+                "Sei in ritardo per una riunione importante a causa del traffico"
+            ],
+            "Situazioni di Responsabilità Difficili": [
+                "Sei un manager che deve riportare in 121 una performance negativa",
+                "Devi dire di no a un collega che ti ha chiesto un favore importante",
+                "Hai commesso un errore che ha causato un ritardo importante",
+                "Devi comunicare al team che il progetto è stato cancellato",
+                "Sei il portavoce di una decisione aziendale impopolare"
+            ],
+            "Situazioni di Esclusione/Isolamento": [
+                "Sei il nuovo arrivato e nessuno ti parla",
+                "Tutti parlano di un progetto di cui non sai nulla",
+                "Sei l'unico che non è stato invitato alla riunione",
+                "Hai un'idea brillante ma nessuno ti ascolta",
+                "Sei in smart working e ti senti disconnesso dal team"
+            ],
+            "Situazioni di Conflitto": [
+                "Un collega si prende sempre i meriti del tuo lavoro",
+                "Due membri del tuo team sono in conflitto e ti chiedono di schierarti",
+                "Hai scoperto che un collega parla male di te alle spalle",
+                "Devi lavorare con qualcuno che ha uno stile completamente diverso dal tuo",
+                "Un cliente ti ha urlato contro per un problema che non hai causato tu"
+            ]
+        };
 
         // Update counters in real time
         document.getElementById('names-input').addEventListener('input', updateCounters);
@@ -244,6 +365,7 @@
             });
 
             currentGroups = groups;
+            currentScenesAssignment = []; // Reset scenes assignment
             displayGroups();
         }
 
@@ -251,9 +373,11 @@
             const container = document.getElementById('groups-container');
             const inputSection = document.getElementById('input-section');
             const resultsSection = document.getElementById('results-section');
+            const empathySection = document.getElementById('empathy-section');
 
-            // Hide input, show results
+            // Hide other sections, show results
             inputSection.style.display = 'none';
+            empathySection.classList.add('hidden');
             resultsSection.classList.remove('hidden');
 
             // Clear container
@@ -288,6 +412,98 @@
             resultsSection.scrollIntoView({ behavior: 'smooth' });
         }
 
+        function assignScenes() {
+            if (currentGroups.length === 0) {
+                alert('Prima devi creare i gruppi!');
+                return;
+            }
+
+            // Create a flat array of all scenes
+            const allScenes = [];
+            Object.keys(empathyScenes).forEach(category => {
+                empathyScenes[category].forEach(scene => {
+                    allScenes.push({
+                        category: category,
+                        scene: scene
+                    });
+                });
+            });
+
+            // Shuffle scenes
+            const shuffledScenes = shuffleArray(allScenes);
+
+            // Assign one scene to each group
+            currentScenesAssignment = currentGroups.map((group, index) => {
+                return shuffledScenes[index % shuffledScenes.length];
+            });
+
+            displayEmpathyGroups();
+        }
+
+        function displayEmpathyGroups() {
+            const container = document.getElementById('empathy-groups-container');
+            const resultsSection = document.getElementById('results-section');
+            const empathySection = document.getElementById('empathy-section');
+
+            // Hide results, show empathy
+            resultsSection.classList.add('hidden');
+            empathySection.classList.remove('hidden');
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Generate group cards with scenes
+            currentGroups.forEach((group, index) => {
+                const groupCard = document.createElement('div');
+                groupCard.className = 'group-card group-card-with-scene';
+                
+                const groupEmojis = ['🟥', '🟩', '🟦', '🟨', '🟪', '🟧', '⬛', '⬜', '🟫', '🔴'];
+                const emoji = groupEmojis[index % groupEmojis.length];
+                const sceneData = currentScenesAssignment[index];
+                
+                groupCard.innerHTML = `
+                    <div class="text-center mb-4">
+                        <h3 class="title-font text-2xl font-bold" style="color: var(--white-flakes);">
+                            ${emoji} Gruppo ${index + 1}
+                        </h3>
+                        <p class="text-sm" style="color: var(--white-flakes); opacity: 0.9;">
+                            ${group.length} ${group.length === 1 ? 'persona' : 'persone'}
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap justify-center mb-4">
+                        ${group.map(name => `<span class="member-tag">${name}</span>`).join('')}
+                    </div>
+                    <div class="scene-card">
+                        <div class="scene-category" style="color: var(--white-flakes);">
+                            ${sceneData.category}
+                        </div>
+                        <div class="scene-text" style="color: var(--white-flakes);">
+                            "${sceneData.scene}"
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(groupCard);
+            });
+
+            // Scroll to empathy section
+            empathySection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function reassignScenes() {
+            assignScenes();
+        }
+
+        function goBackToGroups() {
+            const resultsSection = document.getElementById('results-section');
+            const empathySection = document.getElementById('empathy-section');
+
+            empathySection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
         function regenerateGroups() {
             generateGroups();
         }
@@ -318,10 +534,42 @@
             URL.revokeObjectURL(url);
         }
 
+        function downloadEmpathyGroups() {
+            let content = 'GRUPPI TEAM BUILDING - TEATRINO DELL\'EMPATIA\n';
+            content += '=============================================\n\n';
+            
+            currentGroups.forEach((group, index) => {
+                const sceneData = currentScenesAssignment[index];
+                content += `GRUPPO ${index + 1} (${group.length} persone)\n`;
+                content += '------------------------\n';
+                content += 'MEMBRI:\n';
+                group.forEach(name => {
+                    content += `• ${name}\n`;
+                });
+                content += '\n';
+                content += `CATEGORIA: ${sceneData.category}\n`;
+                content += `SCENA: "${sceneData.scene}"\n`;
+                content += '\n';
+            });
+            
+            content += `\nGenerato il: ${new Date().toLocaleDateString('it-IT')}\n`;
+            content += `Totale partecipanti: ${currentNames.length}\n`;
+            content += `Numero gruppi: ${currentGroups.length}`;
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'gruppi-teatrino-empatia.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
         function resetApp() {
             // Reset all data
             currentNames = [];
             currentGroups = [];
+            currentScenesAssignment = [];
             
             // Reset inputs
             document.getElementById('names-input').value = '';
@@ -330,6 +578,7 @@
             // Reset UI
             document.getElementById('input-section').style.display = 'block';
             document.getElementById('results-section').classList.add('hidden');
+            document.getElementById('empathy-section').classList.add('hidden');
             
             // Update counters
             updateCounters();
